@@ -6,11 +6,16 @@ Created on Wed Apr  2 11:00:40 2025
 @author: caoxufei
 """
 
+import random
+import string
+
 class SeatBookingSystem:
     def __init__(self, rows=80, cols="ABCXDEF"):
         self.rows = rows  # Total number of rows in the seating plan
         self.cols = cols  # Column labels (A, B, C, X, D, E, F)
         self.seats = self._create_seats_table()  # Initialize the seats dictionary
+        # Create a dictionary to store booking details instead of a database
+        self.bookings = {}  # Key is the booking reference, value is a dictionary with customer info
 
     def _create_seats_table(self):
         seats = {}
@@ -25,6 +30,17 @@ class SeatBookingSystem:
                     seats[seat_id] = "F"  # Mark as free (available for booking)
         return seats
 
+    # New function to generate a random 8-character booking reference
+    def generate_booking_ref(self):
+        # Use uppercase letters (A-Z) and numbers (0-9) to make the reference
+        characters = string.ascii_uppercase + string.digits
+        while True:  # Keep trying until we get a unique reference
+            # Pick 8 random characters and join them into a string
+            booking_ref = ''.join(random.choice(characters) for _ in range(8))
+            # Check if this reference is already used in our bookings dictionary
+            if booking_ref not in self.bookings:
+                return booking_ref  # If it’s not used, return it as the new reference
+
     def check_availability(self, row, col):
         seat_id = f"{row}{col}"  # Construct seat ID
         # Verify that row and column are within the valid range of the seat layout
@@ -33,12 +49,12 @@ class SeatBookingSystem:
             # If the seat is marked F, it’s available for booking
             if seat == "F":
                 print(f"Seat {seat_id} is available")
-            # If the seat is marked R, it’s already reserved
-            elif seat == "R":
-                print(f"Seat {seat_id} is reserved")
-            # For X or S, the seat cannot be booked due to being an aisle or storage
-            else:
+            # If the seat is marked X or S, it can’t be booked
+            elif seat in ["X", "S"]:
                 print(f"Seat {seat_id} cannot be booked (aisle or storage)")
+            # If it’s not F, X, or S, it must be a booking reference, so it’s reserved
+            else:
+                print(f"Seat {seat_id} is reserved")
         # Handle invalid row or column inputs
         else:
             print("Invalid row or column number")
@@ -49,12 +65,27 @@ class SeatBookingSystem:
         if (1 <= row <= self.rows and col in self.cols):
             # Check if the seat is free (F) and can be booked
             if self.seats[seat_id] == "F":
-                self.seats[seat_id] = "R"  # Update the seat status to reserved
-                print(f"Seat {seat_id} has been booked")
+                # Ask the user for customer details to store with the booking
+                passport = input("Enter passport number: ")
+                first_name = input("Enter first name: ")
+                last_name = input("Enter last name: ")
+                # Generate a unique 8-character booking reference
+                booking_ref = self.generate_booking_ref()
+                # Store the booking reference in the seats dictionary instead of "R"
+                self.seats[seat_id] = booking_ref
+                # Save the customer details in the bookings dictionary using the reference as the key
+                self.bookings[booking_ref] = {
+                    "passport": passport,    
+                    "first_name": first_name,  
+                    "last_name": last_name,    
+                    "seat_row": row,          
+                    "seat_col": col          
+                }
+                print(f"Seat {seat_id} booked with reference {booking_ref}")
             # If the seat is an aisle (X) or storage (S), booking is not allowed
             elif self.seats[seat_id] in ["X", "S"]:
                 print("Cannot book an aisle or storage area")
-            # If the seat is already reserved (R), inform the user
+            # If the seat is already reserved, inform the user
             else:
                 print("Seat is already reserved")
         # Notify the user if the row or column is invalid
@@ -65,9 +96,14 @@ class SeatBookingSystem:
         seat_id = f"{row}{col}"  # Construct seat ID
         # Ensure the row and column are within the valid range
         if (1 <= row <= self.rows and col in self.cols):
-            # If the seat is reserved (R), it can be freed
-            if self.seats[seat_id] == "R":
-                self.seats[seat_id] = "F"  # Change the seat status back to free
+            # If the seat is reserved (not F, X, or S), it has a booking reference
+            if self.seats[seat_id] not in ["F", "X", "S"]:
+                # Get the booking reference from the seat
+                booking_ref = self.seats[seat_id]
+                # Remove the customer details from the bookings dictionary
+                del self.bookings[booking_ref]
+                # Change the seat status back to free (F)
+                self.seats[seat_id] = "F"
                 print(f"Seat {seat_id} has been released")
             # If the seat is an aisle (X) or storage (S), no action is needed
             elif self.seats[seat_id] in ["X", "S"]:
