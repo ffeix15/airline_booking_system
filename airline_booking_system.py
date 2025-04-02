@@ -105,9 +105,10 @@ def main():
         print("3. Free a seat")
         print("4. Show booking status")
         print("5. Exit program")
+        print("6. Show total available seats")
         
         # Get the user’s choice from the menu
-        choice = input("Select an option (1-5): ")
+        choice = input("Select an option (1-6): ")
         
         if choice == "1":  # Option 1: Check availability of a seat
             # Prompt for row and column (no adjustment needed for 1-based indexing)
@@ -131,10 +132,13 @@ def main():
         elif choice == "5":  # Option 5: Exit the program
             print("Program terminated")
             break  # End the loop and stop the program
- 
+            
+        elif choice == "6":  # Option 6: Show total available seats
+            booking_system.count_available_seats()  # Call function to count and display free seats
+        
         # Handle cases where the input isn’t a valid option
         else:
-            print("Option not recognized, please select 1-5")
+            print("Option not recognized, please select 1-6")
 
 if __name__ == "__main__":
     main()
